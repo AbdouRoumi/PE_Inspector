@@ -172,7 +172,7 @@ Contributions are welcome! If you encounter issues or have ideas for improvement
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE.txt).
 
 ---
 **Happy Inspecting! 🛡️**
