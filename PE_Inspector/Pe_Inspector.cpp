@@ -1,5 +1,3 @@
-#include "Calls.h"
-
 #include <Windows.h>
 #include <stdio.h>
 #include <winternl.h>
@@ -56,12 +54,12 @@ BOOL PeParser(LPCSTR lpFileName, PBYTE* pPe, SIZE_T* sPe) {
 	}
 
 	printf("Size Of Code Section : %d \n", ImgOptHdr.SizeOfCode);
-	printf("Address Of Code Section : 0x%p \n\t\t[RVA : 0x%0.8X]\n", (PVOID)(pPE + ImgOptHdr.BaseOfCode), ImgOptHdr.BaseOfCode);
+	printf("Address Of Code Section : 0x%p \n\t\t[RVA : 0x%0.8X]\n", (PVOID)(pPe + ImgOptHdr.BaseOfCode), ImgOptHdr.BaseOfCode);
 	printf("Size Of Initialized Data : %d \n", ImgOptHdr.SizeOfInitializedData);
 	printf("Size Of Unitialized Data : %d \n", ImgOptHdr.SizeOfUninitializedData);
 	printf("Preferable Mapping Address : 0x%p \n", (PVOID)ImgOptHdr.ImageBase);
 	printf("Required Version : %d.%d \n", ImgOptHdr.MajorOperatingSystemVersion, ImgOptHdr.MinorOperatingSystemVersion);
-	printf("Address Of The Entry Point : 0x%p \n\t\t[RVA : 0x%0.8X]\n", (PVOID)(pPE + ImgOptHdr.AddressOfEntryPoint), ImgOptHdr.AddressOfEntryPoint);
+	printf("Address Of The Entry Point : 0x%p \n\t\t[RVA : 0x%0.8X]\n", (PVOID)(pPe + ImgOptHdr.AddressOfEntryPoint), ImgOptHdr.AddressOfEntryPoint);
 	printf("Size Of The Image : %d \n", ImgOptHdr.SizeOfImage);
 	printf("File CheckSum : 0x%0.8X \n", ImgOptHdr.CheckSum);
 	printf("Number of entries in the DataDirectory array : %d \n", ImgOptHdr.NumberOfRvaAndSizes); // this is the same as `IMAGE_NUMBEROF_DIRECTORY_ENTRIES` - `16`
@@ -112,7 +110,42 @@ BOOL PeParser(LPCSTR lpFileName, PBYTE* pPe, SIZE_T* sPe) {
 
 	printf("\n\t#####################[ SECTIONS ]#####################\n\n");
 
+	PIMAGE_SECTION_HEADER pImgSectionHdr = (PIMAGE_SECTION_HEADER)(((PBYTE)pImgSectionHdr) + sizeof(IMAGE_NT_HEADERS));
+
+	for (size_t i = 0; i < pImgNtHdrs->FileHeader.NumberOfSections; i++) {
+		printf("Name : %s \n", (CHAR*)pImgSectionHdr->Name);
+		printf("\tSize : %d \n", pImgSectionHdr->SizeOfRawData);
+		printf("\tRVA : 0x%0.8X \n", pImgSectionHdr->VirtualAddress);
+		printf("\tAddress : 0x%p \n", (PVOID)(pPe + pImgSectionHdr->VirtualAddress));
+		printf("\tRelocations : %d \n", pImgSectionHdr->NumberOfRelocations);
+		printf("\tPermissions : ");
+		if (pImgSectionHdr->Characteristics & IMAGE_SCN_MEM_READ)
+			printf("PAGE_READONLY | ");
+		if (pImgSectionHdr->Characteristics & IMAGE_SCN_MEM_WRITE && pImgSectionHdr->Characteristics & IMAGE_SCN_MEM_READ)
+			printf("PAGE_READWRITE | ");
+		if (pImgSectionHdr->Characteristics & IMAGE_SCN_MEM_EXECUTE)
+			printf("PAGE_EXECUTE | ");
+		if (pImgSectionHdr->Characteristics & IMAGE_SCN_MEM_EXECUTE && pImgSectionHdr->Characteristics & IMAGE_SCN_MEM_READ)
+			printf("PAGE_EXECUTE_READWRITE");
+		printf("\n\n");
+
+		pImgSectionHdr = (PIMAGE_SECTION_HEADER)((PBYTE)pImgSectionHdr + (DWORD)sizeof(IMAGE_SECTION_HEADER));
+	}
+
+	
+	}
+
+	int main(int argc,char* argv[]) {
+
+		if (argc < 2) {
+			printf("Please Enter Pe File To Inspect ... \n");
+			return -1;
+		}
 
 
 
-}
+
+	
+	
+	}
+
