@@ -3,9 +3,7 @@
 #include <winternl.h>
 
 
-
-
-BOOL PeParser(LPCSTR lpFileName, PBYTE* pPe, SIZE_T* sPe) {
+BOOL PeInspector(LPCSTR lpFileName, PBYTE* pPe, SIZE_T* sPe) {
 
 	//Getting the DOS_Header
 
@@ -135,12 +133,80 @@ BOOL PeParser(LPCSTR lpFileName, PBYTE* pPe, SIZE_T* sPe) {
 	
 	}
 
+
+
+
+
+	BOOL ReadPeFile(LPCSTR lpFileName, PBYTE* pPe, SIZE_T* sPe) {
+		HANDLE hFile = INVALID_HANDLE_VALUE;
+		PBYTE pBuff = NULL;
+		DWORD dwFileSize = 0, dwNumberOfBytesRead = 0;
+
+		printf("Reading ....... %s\n", lpFileName);
+		hFile = CreateFileA(lpFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hFile == INVALID_HANDLE_VALUE) {
+			printf("CreateFileA Failed With Error : %d \n", GetLastError());
+			return FALSE;
+		}
+
+		dwFileSize = GetFileSize(hFile, NULL);
+		if (dwFileSize == 0) {
+			printf("GetFileSize Failed With Error : %d \n", GetLastError());
+			CloseHandle(hFile);
+			return FALSE;
+		}
+
+		pBuff = (PBYTE)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwFileSize);
+		if (pBuff == NULL) {
+			printf("[!] HeapAlloc Failed With Error : %d \n", GetLastError());
+			CloseHandle(hFile);
+			return FALSE;
+		}
+
+		if (!ReadFile(hFile, pBuff, dwFileSize, &dwNumberOfBytesRead, NULL) || dwFileSize != dwNumberOfBytesRead) {
+			printf("[!] ReadFile Failed With Error : %d \n", GetLastError());
+			HeapFree(GetProcessHeap(), NULL, pBuff);
+			CloseHandle(hFile);
+			return FALSE;
+		}
+
+		CloseHandle(hFile);
+
+		*pPe = pBuff;
+		*sPe = dwFileSize;	
+
+		printf("[+] DONE \n");
+		return TRUE;
+	}
+
+
+
 	int main(int argc,char* argv[]) {
 
 		if (argc < 2) {
 			printf("Please Enter Pe File To Inspect ... \n");
 			return -1;
 		}
+
+
+		PBYTE	pPE = NULL;
+		SIZE_T	sPE = NULL;
+
+		if (!ReadPeFile(argv[1], &pPE, &sPE)) {
+			return -1;
+		}
+
+		printf("[+] \"%s\" Read At : 0x%p Of Size : %d \n", argv[1], pPE, sPE);
+
+		PeInspector(pPE);
+
+
+		printf("[#] Press <Enter> To Quit ... ");
+		getchar();
+
+		HeapFree(GetProcessHeap(), NULL, pPE);
+
+		return 0;
 
 
 
