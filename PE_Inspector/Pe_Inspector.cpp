@@ -187,6 +187,7 @@ BOOL PeInspector(LPCSTR lpFileName, PBYTE* pPe, SIZE_T* sPe) {
 			printf("Please Enter Pe File To Inspect ... \n");
 			return -1;
 		}
+		
 
 
 		PBYTE	pPE = NULL;
